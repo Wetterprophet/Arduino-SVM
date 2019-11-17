@@ -6,7 +6,11 @@
 #error "must define gamma for rbf kernel."
 #endif
 
-#include <avr/pgmspace.h>
+#if (defined(__AVR__))
+#include <avr\pgmspace.h>
+#else
+#include <pgmspace.h>
+#endif
 /*
  * \param u a vector in program memory
  * \param v a vector in main memory

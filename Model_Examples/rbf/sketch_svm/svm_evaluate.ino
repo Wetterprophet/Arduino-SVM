@@ -2,7 +2,11 @@
 #error
 #endif
 
-#include <avr/pgmspace.h>
+#if (defined(__AVR__))
+#include <avr\pgmspace.h>
+#else
+#include <pgmspace.h>
+#endif
 
 
 inline float svm_evaluate(int n_sv, float* coeffs, float* sv_class, float* sensors){

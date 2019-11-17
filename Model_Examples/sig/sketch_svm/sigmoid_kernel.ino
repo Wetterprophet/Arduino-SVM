@@ -10,7 +10,11 @@
 #error
 #endif
 
-#include <avr/pgmspace.h>
+#if (defined(__AVR__))
+#include <avr\pgmspace.h>
+#else
+#include <pgmspace.h>
+#endif
 
 
 inline float sigmoid_kernel(float* u, float* v){

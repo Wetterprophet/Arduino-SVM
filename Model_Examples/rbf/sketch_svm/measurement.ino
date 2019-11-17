@@ -1,8 +1,12 @@
-#include <avr/pgmspace.h>
+#if (defined(__AVR__))
+#include <avr\pgmspace.h>
+#else
+#include <pgmspace.h>
+#endif
 
  // In this section you should implement the handling of your sensor data, which you would like to classify.
  // and an example would be:
-int sensors[5] = {0}; 
+int sensors[5] = {0};
 
 // int sensor1, sensor2, sensor3, sensor4, sensor5;
 

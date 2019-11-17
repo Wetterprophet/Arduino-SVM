@@ -6,7 +6,11 @@
 #error
 #endif
 
-#include <avr/pgmspace.h>
+#if (defined(__AVR__))
+#include <avr\pgmspace.h>
+#else
+#include <pgmspace.h>
+#endif
 
 inline float rbf_kernel(float* u, float* v){
   float result=0;
