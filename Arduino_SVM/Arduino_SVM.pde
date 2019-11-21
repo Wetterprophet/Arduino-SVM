@@ -61,15 +61,15 @@ void draw() {
 // if close is pressed the window is closed
 void controlEvent(ControlEvent theEvent) {
   if (theEvent.isFrom(start)) {
-    
+
     // creation of the output file writer and the input file readers
     output      = createWriter( outputFileName.getText()+"/sketch_svm/sketch_svm.ino" );
     modelData   = loadStrings(modelFileName.getText());
     scalingData = loadStrings(scalingFileName.getText());
-    
+
     if (modelData == null || scalingData == null) {
       fill(0, 0, 0);
-      stroke (0); 
+      stroke (0);
       rect(10, 100, 200, 45);
       text.setText("Please insert correct paths");
       return;
@@ -79,13 +79,13 @@ void controlEvent(ControlEvent theEvent) {
     split = split(modelData[0], " ");
     if (!split[0].equals("svm_type")) {
       fill(0, 0, 0);
-      stroke (0); 
+      stroke (0);
       rect(10, 100, 200, 45);
       text.setText("Please insert a model file path");
       return;
     } else if (!split[1].equals("c_svc")) {
       fill(0, 0, 0);
-      stroke (0); 
+      stroke (0);
       rect(10, 100, 200, 45);
       text.setText("Please insert a c_svc model");
       return;
@@ -114,7 +114,6 @@ void controlEvent(ControlEvent theEvent) {
 
           // create the Arduino sketch from the model and scaling parameters
           boolean sv = false;
-          output.println("#include <avr/pgmspace.h>");
           // for every line of the model file read the information and create the Arduino sketch
           for (int i = 0; i < modelData.length; i++) {
 
@@ -136,7 +135,7 @@ void controlEvent(ControlEvent theEvent) {
                   svs[r] = "";
                 }
                 for (int y = start; y < start + nr_sv[x]; y++) {
-                  split = split(modelData[y], " ");                  
+                  split = split(modelData[y], " ");
                   int nr = 1;
 
                   for (int j = 0; j < yalpha.length; j++) {
@@ -168,12 +167,12 @@ void controlEvent(ControlEvent theEvent) {
                     nr_sens = nr-1;
                   }
                 }
-                model = model + "\n const PROGMEM float yalpha"+str(x+1)+"["+str(nr_sv[x])+" * (NR_CLASS-1)] = {";
+                model = model + "\n const float yalpha"+str(x+1)+"["+str(nr_sv[x])+" * (NR_CLASS-1)] = {";
                 for (int t = 0; t < yalpha.length; t++) {
                   model = model + yalpha[t];
                 }
                 model = model + "}; \n";
-                model = model + "\n const PROGMEM float sv"+str(x+1)+"["+str(nr_sv[x])+" * VEC_DIM] = {";
+                model = model + "\n const float sv"+str(x+1)+"["+str(nr_sv[x])+" * VEC_DIM] = {";
                 for (int p = 0; p < svs.length; p++) {
 
                   model = model + svs[p];
@@ -182,14 +181,14 @@ void controlEvent(ControlEvent theEvent) {
 
                 start = start + nr_sv[x];
                 x++;
-              } 
+              }
               output.println("#define VEC_DIM " + str(nr_sens));
               break;
               // as long as the SV section is not reached read out the other data
             } else {
               if (split.length > 2) {
                 if (split[0].equals("rho")) {
-                  model = model + "\n" + "const  PROGMEM float " + split[0]+"[]" + " = {";
+                  model = model + "\n" + "const  float " + split[0]+"[]" + " = {";
                 } else {
                   model = model + "\n" + "const int " + split[0]+"[]" + " = {";
                 }
@@ -214,7 +213,7 @@ void controlEvent(ControlEvent theEvent) {
                   model = model + "\n" + "#define GAMMA "  + split[1];
                 }
                 if (split[0].equals("rho")) {
-                  model = model + "\n" + "const  PROGMEM float " + split[0]+"[]" + " = {" + split[1] + "};";
+                  model = model + "\n" + "const  float " + split[0]+"[]" + " = {" + split[1] + "};";
                 }
                 if (split[0].equals("nr_class")) {
                   model = model + "\n" + "#define NR_CLASS "  + split[1];
@@ -250,7 +249,7 @@ void controlEvent(ControlEvent theEvent) {
           }
 
           // output the information of the model into the Arduino sketch
-          output.println(model); 
+          output.println(model);
           // read in the scaling parameters
           for (int i = 0; i < scalingData.length; i++) {
             if (i == 1) {
@@ -274,78 +273,78 @@ void controlEvent(ControlEvent theEvent) {
           for (int i = 0; i<scale.length; i++) {
             output.println(scale[i]);
           }
-          
+
           // output of all other needed data of the Arduino sketch
           output.println("int result[NR_CLASS]={0};");
 
-          output.println("\n float const* const supportVectors[NR_CLASS] PROGMEM = {");
+          output.println("\n float const* const supportVectors[NR_CLASS] = {");
           for (int t = 1; t <= nr_class; t++) {
             output.print("sv"+str(t)+", ");
           }
           output.print("};");
 
-          output.println("\n const float* const valuesForSupport[NR_CLASS] PROGMEM = {");
+          output.println("\n const float* const valuesForSupport[NR_CLASS] = {");
           for (int t = 1; t <= nr_class; t++) {
             output.print("yalpha"+str(t)+", ");
           }
           output.print("};");
 
-          output.print("\n\nvoid scale(const int* sensor, float* scaledSensor){\n  for(int p=0; p<VEC_DIM;p++){\n    scaledSensor[p] = (float)scalePar[0] +((float)scalePar[1] -((float)scalePar[0]))*((float)sensor[p]-(float)low[p])/((float)high[p]-(float)low[p]);\n  }\n}");
-          output.println("\n\ninline void svm_predict(int sensor[]){\n  int recognizedClass = 1;\n  float scaledSensor[VEC_DIM];\n  scale(sensor,scaledSensor);\n  int rhoCounter = 0;");
+          output.print("\n\nvoid scale(float* sensor, float* scaledSensor){\n  for(int p=0; p<VEC_DIM;p++){\n    scaledSensor[p] = (float)scalePar[0] +((float)scalePar[1] -((float)scalePar[0]))*((float)sensor[p]-(float)low[p])/((float)high[p]-(float)low[p]);\n  }\n}");
+          output.println("\n\ninline void svm_predict(float sensor[]){\n  int recognizedClass = 1;\n  float scaledSensor[VEC_DIM];\n  scale(sensor,scaledSensor);\n  int rhoCounter = 0;");
           output.println("\n\n  for(int i=0; i<NR_CLASS; i++){\n    for(int j=i+1; j<NR_CLASS; j++){\n      float accumulator = 0;");
-          output.println("\n\n      float* sv_class1 = (float*) pgm_read_word(supportVectors + i);\n      float* sv_class2 = (float*) pgm_read_word(supportVectors + j);\n      float* coeffs1   = (float*) pgm_read_word(valuesForSupport + i) + nr_sv[i] * (j-1);\n     float* coeffs2   = (float*) pgm_read_word(valuesForSupport + j) + nr_sv[j] * i;"); 
+          output.println("\n\n      float* sv_class1 = (float*) supportVectors [i];\n      float* sv_class2 = (float*) supportVectors [j];\n      float* coeffs1   = (float*) valuesForSupport [i] + nr_sv[i] * (j-1);\n     float* coeffs2   = (float*) valuesForSupport [j] + nr_sv[j] * i;");
           output.println("\n\n      accumulator += svm_evaluate(nr_sv[i], coeffs1, sv_class1, scaledSensor);\n      accumulator += svm_evaluate(nr_sv[j], coeffs2, sv_class2, scaledSensor);");
-          output.println("\n\n      float rhoNr = pgm_read_float(rho + rhoCounter);\n      accumulator -= rhoNr;");
+          output.println("\n\n      float rhoNr = rho [rhoCounter];\n      accumulator -= rhoNr;");
           output.println("\n\n      if (accumulator > 0) {\n        result[i]++;\n      } else {\n        result[j]++;\n      }\n      rhoCounter++;\n    }\n  }");
           output.println("\n\n  int temp = 0;\n  for(int t = 0; t < NR_CLASS; t++){\n    if(result[temp] <= result[t]){\n      recognizedClass = t;\n      temp = t;\n    }\n  }");
           output.println("\n\n  Serial.println(recognizedClass, DEC);\n  delay(500);\n  for(int q = 0; q < NR_CLASS; q++){\n    result[q]=0;\n  }\n}");
-          output.flush();  
-          output.close();  
+          output.flush();
+          output.close();
           // selection of the used kernel class
           if (kernelType.equals("linear")) {
             output = createWriter( outputFileName.getText()+"/sketch_svm/linear_kernel.ino" );
-            output.println("#ifndef VEC_DIM\n#error \n#endif\n\n#include <avr/pgmspace.h>\n\ninline float linear_kernel(float* u, float* v){\n  float result=0;\n  for (int j=0; j<VEC_DIM; j++){\n    result += pgm_read_float(u + j) * v[j];\n  }\n  return result;\n}");
-            output.flush();  
+            output.println("#ifndef VEC_DIM\n#error \n#endif\n\ninline float linear_kernel(float* u, float* v){\n  float result=0;\n  for (int j=0; j<VEC_DIM; j++){\n    result += u [j] * v[j];\n  }\n  return result;\n}");
+            output.flush();
             output.close();
           }
 
           output = createWriter( outputFileName.getText()+"/sketch_svm/measurement.ino" );
-          output.println("#include <avr/pgmspace.h>\n\n // In this section you should implement the handling of your sensor data, which you would like to classify.\n // and an example would be:\nint sensors[5] = {0}; ");
-          output.println("\n// int sensor1, sensor2, sensor3, sensor4, sensor5;");
-          output.println("\n void setup(){\n  Serial.begin(115200);\n}");
+          output.println(" // In this section you should implement the handling of your sensor data, which you would like to classify.");
+          output.println("\n float sensor1, sensor2, sensor3, sensor4, sensor5, sensor6, sensor7, sensor8, sensor9, sensor10;\n#include <Arduino_LSM9DS1.h>");
+          output.println("\n void setup(){\n  Serial.begin(9600);\n}");
           output.println("\nvoid loop(){");
-          output.println("\n  //sensor1 = analogRead(0);\n  //sensor2 = analogRead(1);\n  //sensor3 = analogRead(2);\n  //sensor4 = analogRead(3);\n  //sensor5 = analogRead(4);\n  //delay(600);\n  // sensors= {sensor1, sensor2, sensor3, sensor4, sensor5};");
+          output.println("\n  IMU.readMagneticField(sensor8, sensor9, sensor10);\n  sensor1 = analogRead(0);\n  sensor2 = analogRead(1);\n  sensor3 = analogRead(2);\n  sensor4 = analogRead(3);\n  sensor5 = analogRead(4);\n  sensor6 = analogRead(5);\n  sensor7 = analogRead(6);\n  delay(600);\n   sensors= {sensor1, sensor2, sensor3, sensor4, sensor5, sensor6, sensor7};");
           output.println("\n  svm_predict(sensors);\n}");
-          output.flush();  
+          output.flush();
           output.close();
           if (kernelType.equals("polynomial")) {
             output = createWriter( outputFileName.getText()+"/sketch_svm/polynomial_kernel.ino" );
-            output.println("#ifndef VEC_DIM\n#error\n#endif\n\n#ifndef GAMMA\n#error\n#endif\n\n#ifndef COEF0\n#error\n#endif\n\n#ifndef DEGREE\n#error\n#endif\n\n#include <avr/pgmspace.h>\n");
-            output.println("inline float polynomial_kernel(float* u, float* v){\n  float result=0;\n\n  for (int j=0; j<VEC_DIM; j++){\n    result += pgm_read_float(u + j) * v[j];\n  }\n\n  return pow((GAMMA * result + COEF0),DEGREE);\n}");
-            output.flush();  
+            output.println("#ifndef VEC_DIM\n#error\n#endif\n\n#ifndef GAMMA\n#error\n#endif\n\n#ifndef COEF0\n#error\n#endif\n\n#ifndef DEGREE\n#error\n#endif\n\n");
+            output.println("inline float polynomial_kernel(float* u, float* v){\n  float result=0;\n\n  for (int j=0; j<VEC_DIM; j++){\n    result += u [j] * v[j];\n  }\n\n  return pow((GAMMA * result + COEF0),DEGREE);\n}");
+            output.flush();
             output.close();
           }
 
           if (kernelType.equals("rbf")) {
             output = createWriter( outputFileName.getText()+"/sketch_svm/rbf_kernel.ino" );
-            output.println("#ifndef VEC_DIM\n#error\n#endif\n\n#ifndef GAMMA\n#error\n#endif\n\n#include <avr/pgmspace.h>");
-            output.println("\ninline float rbf_kernel(float* u, float* v){\n  float result=0;\n  for (int j=0; j<VEC_DIM; j++){\n    float temp = pgm_read_float(u + j) - v[j];\n    result += temp * temp;\n  }\n  return exp(-GAMMA * result);\n}");
-            output.flush();  
+            output.println("#ifndef VEC_DIM\n#error\n#endif\n\n#ifndef GAMMA\n#error\n#endif\n");
+            output.println("\ninline float rbf_kernel(float* u, float* v){\n  float result=0;\n  for (int j=0; j<VEC_DIM; j++){\n    float temp = u [j] - v[j];\n    result += temp * temp;\n  }\n  return exp(-GAMMA * result);\n}");
+            output.flush();
             output.close();
           }
 
           if (kernelType.equals("sigmoid")) {
             output = createWriter( outputFileName.getText()+"/sketch_svm/sigmoid_kernel.ino" );
-            output.println("#ifndef VEC_DIM\n#error\n#endif\n\n#ifndef GAMMA\n#error\n#endif\n\n#ifndef COEF0\n#error\n#endif\n\n#include <avr/pgmspace.h>\n\n");
-            output.println("inline float sigmoid_kernel(float* u, float* v){\n  float result=0;\n  for (int j=0; j<VEC_DIM; j++){\n    result += pgm_read_float(u + j) - v[j];\n  }\n  return tanh(GAMMA * result + COEF0);\n}");
-            output.flush();  
+            output.println("#ifndef VEC_DIM\n#error\n#endif\n\n#ifndef GAMMA\n#error\n#endif\n\n#ifndef COEF0\n#error\n#endif\n\n");
+            output.println("inline float sigmoid_kernel(float* u, float* v){\n  float result=0;\n  for (int j=0; j<VEC_DIM; j++){\n    result += u [j] - v[j];\n  }\n  return tanh(GAMMA * result + COEF0);\n}");
+            output.flush();
             output.close();
           }
 
 
           output = createWriter( outputFileName.getText()+"/sketch_svm/svm_evaluate.ino" );
-          output.println("#ifndef VEC_DIM\n#error\n#endif\n\n#include <avr/pgmspace.h>\n\n");
-          output.println("inline float svm_evaluate(int n_sv, float* coeffs, float* sv_class, float* sensors){\n  float result= 0;\n  float* sv_current = sv_class;\n  for (int i=0; i<n_sv; i++, sv_current += VEC_DIM){\n    float coeff = pgm_read_float(coeffs + i);\n");
+          output.println("#ifndef VEC_DIM\n#error\n#endif\n\n");
+          output.println("inline float svm_evaluate(int n_sv, float* coeffs, float* sv_class, float* sensors){\n  float result= 0;\n  float* sv_current = sv_class;\n  for (int i=0; i<n_sv; i++, sv_current += VEC_DIM){\n    float coeff = coeffs [i];\n");
           if (kernelType.equals("rbf")) {
             output.println("\n    result += coeff * rbf_kernel(sv_current, sensors);");
           } else if (kernelType.equals("sigmoid")) {
@@ -358,15 +357,14 @@ void controlEvent(ControlEvent theEvent) {
           output.println("\n  }");
           output.println("\n  return result;");
           output.println("\n}");
-          output.flush();  
+          output.flush();
           output.close();
 
           exit();
-        
-      
+
+
     }
   } else if (theEvent.isFrom(close)) {
     exit();
   }
-}  
-
+}

@@ -1,0 +1,2 @@
+- data.txt hält Daten im Format "class sensor#: value sensor#: value"
+- svm-train -s 0 -t 2 filenamescaled.txt outputfile.txt
